@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from './Sidebar'
+import { Button } from './ui/button'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -35,6 +36,9 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="flex h-screen">
       <Sidebar />
       <main className="flex-1 overflow-hidden">
+        <div className="flex justify-between items-center p-4 border-b">
+          <h2 className="text-xl font-bold">Chat</h2>
+        </div>
         {children}
       </main>
     </div>

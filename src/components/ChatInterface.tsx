@@ -8,6 +8,25 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Mic, Send } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
+declare global {
+  interface Window {
+    SpeechRecognition?: any;
+    webkitSpeechRecognition?: any;
+  }
+  type SpeechRecognitionEvent = {
+    results: {
+      [key: number]: {
+        [key: number]: {
+          transcript: string;
+        };
+      };
+    };
+  };
+  type SpeechRecognitionErrorEvent = {
+    error: string;
+  };
+}
+
 const ChatInterface = () => {
   const { messages, input, handleInputChange, handleSubmit, setInput } = useChat()
   const [isRecording, setIsRecording] = useState(false)
@@ -22,21 +41,24 @@ const ChatInterface = () => {
   const startRecording = () => {
     setIsRecording(true)
     // Web Speech API
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    const recognition = new SpeechRecognition()
+    if (window !== undefined && (window?.SpeechRecognition || window?.webkitSpeechRecognition)) {
+      const SpeechRecognition = window?.SpeechRecognition || window?.webkitSpeechRecognition
+      const recognition = new SpeechRecognition()
 
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript
-      setInput(transcript)
-      setIsRecording(false)
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = event.results[0][0].transcript
+        setInput(transcript)
+        setIsRecording(false)
+      }
+
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+        console.error('Speech recognition error', event.error)
+        setIsRecording(false)
+      }
+
+      recognition.start()
     }
 
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error', event.error)
-      setIsRecording(false)
-    }
-
-    recognition.start()
   }
 
   return (

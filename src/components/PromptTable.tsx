@@ -15,8 +15,8 @@ interface Prompt {
   _id: string
   title: string
   content: string
-  promptType: 'SYSTEM_PROMPT' | 'SPECIALIZED_PROMPT'
-  accessType: 'ADMIN_PROMPT' | 'USER_PROMPT'
+  prompt_type: 'SYSTEM_PROMPT' | 'SPECIALIZED_PROMPT'
+  access_type: 'ADMIN_PROMPT' | 'USER_PROMPT'
 }
 
 export function PromptTable() {
@@ -61,8 +61,8 @@ export function PromptTable() {
       const payload = {
         title: updatedPrompt.title,
         content: updatedPrompt.content,
-        promptType: updatedPrompt.promptType,
-        accessType: updatedPrompt.accessType
+        promptType: updatedPrompt.prompt_type,
+        accessType: updatedPrompt.access_type
       }
 
       if (updatedPrompt._id) {
@@ -84,8 +84,8 @@ export function PromptTable() {
       _id: '',
       title: '',
       content: '',
-      promptType: 'SYSTEM_PROMPT',
-      accessType: 'USER_PROMPT'
+      prompt_type: 'SYSTEM_PROMPT',
+      access_type: 'USER_PROMPT'
     })
     setIsModalOpen(true)
   }
@@ -184,13 +184,13 @@ export function PromptTable() {
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="promptType" className="text-right">Prompt Type</Label>
                   <Select
-                    value={editingPrompt.promptType}
+                    value={editingPrompt.prompt_type}
                     onValueChange={(value: 'SYSTEM_PROMPT' | 'SPECIALIZED_PROMPT') =>
-                      setEditingPrompt({ ...editingPrompt, promptType: value })}
+                      setEditingPrompt({ ...editingPrompt, prompt_type: value })}
                   >
                     <SelectTrigger className="col-span-3">
                       <SelectValue>
-                        {editingPrompt.promptType === 'SYSTEM_PROMPT' ? 'System' : 'Specialized'}
+                        {editingPrompt.prompt_type === 'SYSTEM_PROMPT' ? 'System' : 'Specialized'}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -202,13 +202,13 @@ export function PromptTable() {
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="accessType" className="text-right">Access Type</Label>
                   <Select
-                    value={editingPrompt.accessType}
+                    value={editingPrompt.access_type}
                     onValueChange={(value: 'ADMIN_PROMPT' | 'USER_PROMPT') =>
-                      setEditingPrompt({ ...editingPrompt, accessType: value })}
+                      setEditingPrompt({ ...editingPrompt, access_type: value })}
                   >
                     <SelectTrigger className="col-span-3">
                       <SelectValue>
-                        {editingPrompt.accessType === 'ADMIN_PROMPT' ? 'Admin' : 'User'}
+                        {editingPrompt.access_type === 'ADMIN_PROMPT' ? 'Admin' : 'User'}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>

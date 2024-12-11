@@ -24,7 +24,16 @@ declare global {
       };
     };
   };
+  type SpeechRecognitionErrorEvent = {
+    error: string;
+  };
 }
+
+type Message = {
+  id: string;
+  role: "user" | "assistant" | "system" | "data";
+  content: string;
+};
 
 const ChatInterface = () => {
   const { messages, setMessages } = useChat()
@@ -84,16 +93,16 @@ const ChatInterface = () => {
     e.preventDefault()
     if (!input.trim()) return
 
-    const userMessage = {
+    const userMessage: Message = {
       id: Date.now().toString(),
-      role: 'user',
+      role: "user",
       content: input
     }
     setMessages([...messages, userMessage])
 
-    const aiMessage = {
+    const aiMessage: Message = {
       id: (Date.now() + 1).toString(),
-      role: 'assistant',
+      role: "assistant",
       content: ''
     }
     setMessages(prev => [...prev, aiMessage])
@@ -164,7 +173,7 @@ const ChatInterface = () => {
         setIsRecording(false)
       }
 
-      recognition.onerror = (event) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error', event.error)
         setIsRecording(false)
       }

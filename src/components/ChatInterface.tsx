@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Mic, Send } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import axiosInstance from '@/lib/axios';
+import axiosInstance, { baseUrl } from '@/lib/axios';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 declare global {
@@ -108,7 +108,7 @@ const ChatInterface = () => {
     setMessages(prev => [...prev, aiMessage])
 
     try {
-      const response = await fetch('https://dev-ai-restapi.aim-football.com/api/send-message', {
+      const response = await fetch(`${baseUrl}/send-message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

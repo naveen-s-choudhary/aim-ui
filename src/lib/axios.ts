@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+export const baseUrl = 'https://dev-ai-restapi.aim-football.com/api'
+
 const axiosInstance = axios.create({
-  baseURL: 'https://dev-ai-restapi.aim-football.com/api',
+  baseURL: baseUrl,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'text/event-stream',

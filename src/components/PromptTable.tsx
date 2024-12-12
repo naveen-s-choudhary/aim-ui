@@ -66,7 +66,7 @@ export function PromptTable() {
       }
 
       if (updatedPrompt._id) {
-        await axiosInstance.post(`/prompts/${updatedPrompt._id}`, payload)
+        await axiosInstance.put(`/prompts/${updatedPrompt._id}`, payload)
       } else {
         await axiosInstance.post('/prompts', payload)
       }

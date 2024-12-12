@@ -1,8 +1,17 @@
 import Link from 'next/link'
-import { MessageSquare, Settings } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { MessageSquare, Settings, LogOut } from 'lucide-react'
 import { cn } from "@/lib/utils"
+import { Button } from './ui/button'
 
 const Sidebar = () => {
+  const router = useRouter()
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    router.push('/login')
+  }
+
   return (
     <div className="flex h-screen w-16 flex-col bg-black text-white">
       <div className="p-4">
@@ -28,6 +37,16 @@ const Sidebar = () => {
           </li>
         </ul>
       </nav>
+      <div className="p-2 mt-auto mb-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center rounded-lg p-2 hover:bg-gray-700 text-gray-300 hover:text-white"
+        >
+          <LogOut className="h-6 w-6" />
+        </Button>
+      </div>
     </div>
   )
 }

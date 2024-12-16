@@ -17,16 +17,29 @@ interface Prompt {
   title: string
   content: string
   active_version: number
-  version: number
-  // history: []
+  history: any[]
   prompt_type: 'SYSTEM_PROMPT' | 'SPECIALIZED_PROMPT'
   access_type: 'ADMIN_PROMPT' | 'USER_PROMPT'
+}
+
+interface Version {
+  _id: string
+  history: any[]
+  title: string
+  content: string
+  active_version: number
 }
 
 export function PromptTable() {
   const [prompts, setPrompts] = useState<Prompt[]>([])
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null)
-  const [versionObj, setVersionObj] = useState<Prompt | {}>({})
+  const [versionObj, setVersionObj] = useState<Version>({
+    _id: "",
+    history: [],
+    title: '',
+    content: '',
+    active_version: 0,
+  })
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isVersionModalOpen, setIsVersionModalOpen] = useState(false)
   const [selectedVersion, setSelectedVersion] = useState("")
@@ -56,7 +69,7 @@ export function PromptTable() {
   const handleVersionEdit = (prompt: Prompt) => {
     setVersionObj(prompt)
     setIsVersionModalOpen(true)
-    setSelectedVersion(prompt?.active_version)
+    setSelectedVersion(prompt?.active_version.toString())
   }
   const handleDelete = async (id: string) => {
     try {
@@ -97,7 +110,10 @@ export function PromptTable() {
       title: '',
       content: '',
       prompt_type: 'SYSTEM_PROMPT',
-      access_type: 'USER_PROMPT'
+      access_type: 'USER_PROMPT',
+      active_version: 0,
+      history: []
+
     })
     setIsModalOpen(true)
   }

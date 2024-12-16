@@ -10,11 +10,15 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import axiosInstance from '@/lib/axios'
+import { Edit2Icon } from 'lucide-react'
 
 interface Prompt {
   _id: string
   title: string
   content: string
+  active_version: number
+  version: number
+  // history: []
   prompt_type: 'SYSTEM_PROMPT' | 'SPECIALIZED_PROMPT'
   access_type: 'ADMIN_PROMPT' | 'USER_PROMPT'
 }
@@ -22,7 +26,10 @@ interface Prompt {
 export function PromptTable() {
   const [prompts, setPrompts] = useState<Prompt[]>([])
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null)
+  const [versionObj, setVersionObj] = useState<Prompt | {}>({})
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isVersionModalOpen, setIsVersionModalOpen] = useState(false)
+  const [selectedVersion, setSelectedVersion] = useState("")
   const [deletePromptId, setDeletePromptId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -46,6 +53,11 @@ export function PromptTable() {
     setIsModalOpen(true)
   }
 
+  const handleVersionEdit = (prompt: Prompt) => {
+    setVersionObj(prompt)
+    setIsVersionModalOpen(true)
+    setSelectedVersion(prompt?.active_version)
+  }
   const handleDelete = async (id: string) => {
     try {
       await axiosInstance.delete(`/prompts/${id}`)
@@ -111,6 +123,22 @@ export function PromptTable() {
       console.error('Error updating prompt order:', error)
     }
   }
+  const handleVersionChange = (value: string) => {
+    setSelectedVersion(value)
+    const findObj = versionObj.history.find((obj) => obj.version === Number(value))
+    setVersionObj({ ...versionObj, content: findObj.content })
+  }
+
+  const handleVersionUpdate = async () => {
+    const payload = {
+      version: selectedVersion,
+    }
+    await axiosInstance.put(`/prompts/set-version/${versionObj._id}`, payload)
+    await fetchPrompts()
+    setIsVersionModalOpen(false)
+
+  }
+
 
   return (
     <div>
@@ -123,18 +151,22 @@ export function PromptTable() {
                 <TableRow>
                   <TableHead>Title</TableHead>
                   <TableHead>Content</TableHead>
+                  <TableHead>Version</TableHead>
                   <TableHead>Prompt Type</TableHead>
                   <TableHead>Access Type</TableHead>
                   <TableHead>Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {prompts.map((prompt, index) => (
-                  <Draggable key={prompt._id} draggableId={prompt._id} index={index}>
+                {prompts.map((prompt, index) => {
+                  const version = prompt.active_version
+                  return <Draggable key={prompt._id} draggableId={prompt._id} index={index}>
                     {(provided) => (
                       <TableRow ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                         <TableCell>{prompt.title}</TableCell>
                         <TableCell>{prompt.content.slice(0, 30)}...</TableCell>
+                        <TableCell className='flex items-center gap-1' align='center'><p>{version}</p><Edit2Icon size={12} color='green'
+                          onClick={() => handleVersionEdit(prompt)} /></TableCell>
                         <TableCell>{prompt.prompt_type}</TableCell>
                         <TableCell>{prompt.access_type}</TableCell>
                         <TableCell>
@@ -144,7 +176,7 @@ export function PromptTable() {
                       </TableRow>
                     )}
                   </Draggable>
-                ))}
+                })}
                 {provided.placeholder}
               </TableBody>
             </Table>
@@ -220,6 +252,66 @@ export function PromptTable() {
               </div>
               <div className="flex justify-end">
                 <Button type="submit">{editingPrompt._id ? 'Save changes' : 'Add prompt'}</Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isVersionModalOpen} onOpenChange={setIsVersionModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Version Updating</DialogTitle>
+          </DialogHeader>
+          {versionObj && (
+            <form onSubmit={(e) => {
+              e.preventDefault()
+              handleVersionUpdate()
+            }}>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={versionObj.title}
+                    className="col-span-4 pointer-events-none"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="content">Content</Label>
+                  <div
+                    id="content"
+                    className="col-span-4 h-64 border rounded p-3 overflow-auto"
+                  >
+                    {versionObj.content}
+                  </div>
+                </div>
+                <div className="grid gap-4 py-4">
+                  {/* Version Selector */}
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="version">
+                      Version
+                    </Label>
+                    <Select
+                      value={selectedVersion}
+                      onValueChange={(value) => handleVersionChange(value)}
+                    >
+                      <SelectTrigger className="col-span-4">
+                        <SelectValue>{`Version ${selectedVersion}`}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {versionObj?.history?.map((item) => (
+                          <SelectItem key={item.version} value={item.version}>
+                            Version {item.version}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button type="submit">Save changes</Button>
               </div>
             </form>
           )}

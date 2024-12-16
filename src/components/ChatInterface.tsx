@@ -9,6 +9,12 @@ import { Mic, Send } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import axiosInstance, { baseUrl } from '@/lib/axios';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import remarkBreaks from "remark-breaks";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { dark, darcula } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 declare global {
   interface Window {
@@ -204,7 +210,31 @@ const ChatInterface = () => {
                 </Avatar>
               )}
               <div className={`max-w-[70%] rounded-lg p-3 ${m.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}>
-                {m.content}
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkBreaks]}
+                  rehypePlugins={[rehypeRaw]}
+                  children={m.content?.trim()?.replace(/\n/gi, "&nbsp; \n")}
+                  components={{
+                    code(props) {
+                      const { children, className, node, ...rest } = props;
+                      const match = /language-(\w+)/.exec(className || "");
+                      return match ? (
+                        <SyntaxHighlighter
+                          {...rest}
+                          PreTag="div"
+                          children={String(children).replace(/\n$/, "")}
+                          language={match[1]}
+                          style={darcula}
+                        />
+                      ) : (
+                        <code {...rest} className={className}>
+                          {children}
+                        </code>
+                      );
+                    },
+                  }}
+                />
+                {/* {m.content} */}
               </div>
               {m.role === 'user' && (
                 <Avatar className="ml-2">

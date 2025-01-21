@@ -273,9 +273,38 @@ const ChatInterface = () => {
                         </code>
                       );
                     },
+                    h1: ({ children }) => <h1 className="text-2xl font-bold mb-4 mt-6">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-xl font-bold mb-3 mt-5">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-lg font-bold mb-2 mt-4">{children}</h3>,
+                    table: ({ children }) => (
+                      <div className="overflow-x-auto my-4">
+                        <table className="min-w-full divide-y divide-gray-200 border">
+                          {children}
+                        </table>
+                      </div>
+                    ),
+                    thead: ({ children }) => (
+                      <thead className="bg-gray-50">
+                        {children}
+                      </thead>
+                    ),
+                    th: ({ children }) => (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {children}
+                      </th>
+                    ),
+                    td: ({ children }) => (
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {children}
+                      </td>
+                    ),
+                    p: ({ children }) => <p className="mb-4 leading-relaxed">{children}</p>,
+                    ul: ({ children }) => <ul className="list-disc list-inside mb-4 ml-4">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal list-inside mb-4 ml-4">{children}</ol>,
+                    li: ({ children }) => <li className="mb-2">{children}</li>,
                   }}
                 >
-                  {m.content?.trim()?.replace(/\n/gi, "&nbsp; \n")}
+                  {m.content}
                 </ReactMarkdown>
               </div>
               {m.role === 'user' && (

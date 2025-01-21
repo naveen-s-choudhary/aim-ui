@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -123,10 +123,7 @@ export function PromptTable() {
     setIsModalOpen(true)
   }
 
-  const onDragEnd = async (result: {
-    destination?: { index: number };
-    source: { index: number };
-  }) => {
+  const onDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
 
     const items = Array.from(prompts);
@@ -148,10 +145,16 @@ export function PromptTable() {
   };
 
   const handleVersionChange = (value: string) => {
-    setSelectedVersion(value)
-    const findObj = versionObj.history.find((obj) => obj.version === Number(value))
-    setVersionObj({ ...versionObj, content: findObj.content })
-  }
+    setSelectedVersion(value);
+    const findObj = versionObj.history.find((obj) => obj.version === Number(value));
+
+    if (findObj) {
+      setVersionObj({ ...versionObj, content: findObj.content });
+    } else {
+      console.error('Version not found');
+      setVersionObj({ ...versionObj, content: '' });
+    }
+  };
 
   const handleVersionUpdate = async () => {
     const payload = {
@@ -323,7 +326,10 @@ export function PromptTable() {
                       </SelectTrigger>
                       <SelectContent>
                         {versionObj?.history?.map((item) => (
-                          <SelectItem key={item.version} value={item.version}>
+                          <SelectItem
+                            key={item.version}
+                            value={item.version.toString()}
+                          >
                             Version {item.version}
                           </SelectItem>
                         ))}

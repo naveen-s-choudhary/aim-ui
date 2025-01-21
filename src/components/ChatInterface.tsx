@@ -17,9 +17,26 @@ import { darcula } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 declare global {
   interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
+    SpeechRecognition: {
+      new(): SpeechRecognition;
+      prototype: SpeechRecognition;
+    };
+    webkitSpeechRecognition: {
+      new(): SpeechRecognition;
+      prototype: SpeechRecognition;
+    };
   }
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  start(): void;
+  stop(): void;
+  abort(): void;
 }
 
 interface SpeechRecognitionResult {
@@ -78,7 +95,7 @@ const ChatInterface = () => {
       if (parsedData?.data && Array.isArray(parsedData.data)) {
         const chatHistory = parsedData.data.map((chat: ChatMessage) => ({
           id: chat._id,
-          role: chat.type === 'ai' ? 'assistant' : 'user',
+          role: chat.type === 'ai' ? 'assistant' as const : 'user' as const,
           content: chat.content,
         }));
         setMessages(chatHistory);

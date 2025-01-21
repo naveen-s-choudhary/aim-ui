@@ -16,18 +16,24 @@ interface Prompt {
   _id: string
   title: string
   content: string
-  active_version: number
-  history: any[]
   prompt_type: 'SYSTEM_PROMPT' | 'SPECIALIZED_PROMPT'
   access_type: 'ADMIN_PROMPT' | 'USER_PROMPT'
+  active_version: number
+  history: VersionHistory[]
 }
 
 interface Version {
   _id: string
-  history: any[]
+  history: VersionHistory[]
   title: string
   content: string
   active_version: number
+}
+
+interface VersionHistory {
+  version: number
+  content: string
+  timestamp?: string
 }
 
 export function PromptTable() {
@@ -61,7 +67,7 @@ export function PromptTable() {
     }
   }
 
-  const handleEdit = (prompt: Prompt) => {
+  const handleEdit = async (prompt: Prompt) => {
     setEditingPrompt(prompt)
     setIsModalOpen(true)
   }
@@ -71,9 +77,9 @@ export function PromptTable() {
     setIsVersionModalOpen(true)
     setSelectedVersion(prompt?.active_version.toString())
   }
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (prompt: Prompt) => {
     try {
-      await axiosInstance.delete(`/prompts/${id}`)
+      await axiosInstance.delete(`/prompts/${prompt._id}`)
       await fetchPrompts()
       setDeletePromptId(null)
     } catch (error) {
@@ -113,32 +119,34 @@ export function PromptTable() {
       access_type: 'USER_PROMPT',
       active_version: 0,
       history: []
-
     })
     setIsModalOpen(true)
   }
 
-  const onDragEnd = async (result: any) => {
-    if (!result.destination) return
+  const onDragEnd = async (result: {
+    destination?: { index: number };
+    source: { index: number };
+  }) => {
+    if (!result.destination) return;
 
-    const items = Array.from(prompts)
-    const [reorderedItem] = items.splice(result.source.index, 1)
-    items.splice(result.destination.index, 0, reorderedItem)
+    const items = Array.from(prompts);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
 
-    setPrompts(items)
+    setPrompts(items);
 
-    // You might want to add an API call here to update the order in the backend
     try {
       await axiosInstance.put('/prompts/reorder', {
         prompts: items.map((item, index) => ({
           _id: item._id,
           order: index
         }))
-      })
+      });
     } catch (error) {
-      console.error('Error updating prompt order:', error)
+      console.error('Error updating prompt order:', error);
     }
-  }
+  };
+
   const handleVersionChange = (value: string) => {
     setSelectedVersion(value)
     const findObj = versionObj.history.find((obj) => obj.version === Number(value))
@@ -152,9 +160,7 @@ export function PromptTable() {
     await axiosInstance.put(`/prompts/set-version/${versionObj._id}`, payload)
     await fetchPrompts()
     setIsVersionModalOpen(false)
-
   }
-
 
   return (
     <div>
@@ -342,7 +348,7 @@ export function PromptTable() {
           <p>Are you sure you want to delete this prompt? This action cannot be undone.</p>
           <div className="flex justify-end space-x-2 mt-4">
             <Button variant="outline" onClick={() => setDeletePromptId(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={() => deletePromptId && handleDelete(deletePromptId)}>Delete</Button>
+            <Button variant="destructive" onClick={() => deletePromptId && handleDelete(prompts.find(p => p._id === deletePromptId) as Prompt)}>Delete</Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -1,10 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState} from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from './Sidebar'
-import { Button } from './ui/button'
-
 interface LayoutProps {
   children: React.ReactNode
 }

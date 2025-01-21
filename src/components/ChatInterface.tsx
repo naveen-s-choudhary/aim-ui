@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react'
 import { useChat } from 'ai/react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Mic, Send } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import axiosInstance, { baseUrl } from '@/lib/axios';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import ReactMarkdown from "react-markdown";
@@ -14,25 +13,34 @@ import rehypeRaw from "rehype-raw";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { dark, darcula } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { darcula } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 declare global {
   interface Window {
-    SpeechRecognition?: any;
-    webkitSpeechRecognition?: any;
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
   }
-  type SpeechRecognitionEvent = {
-    results: {
-      [key: number]: {
-        [key: number]: {
-          transcript: string;
-        };
-      };
-    };
-  };
-  type SpeechRecognitionErrorEvent = {
-    error: string;
-  };
+}
+
+interface SpeechRecognitionResult {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult[];
+  [index: number]: SpeechRecognitionResult[];
+}
+
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
 }
 
 type Message = {
@@ -40,6 +48,20 @@ type Message = {
   role: "user" | "assistant" | "system" | "data";
   content: string;
 };
+
+interface ChatHistoryResponse {
+  data: {
+    _id: string;
+    type: string;
+    content: string;
+  }[];
+}
+
+interface ChatMessage {
+  _id: string;
+  type: string;
+  content: string;
+}
 
 const ChatInterface = () => {
   const { messages, setMessages } = useChat()
@@ -51,10 +73,10 @@ const ChatInterface = () => {
   const fetchChatHistory = async () => {
     try {
       const response = await axiosInstance.get('/user/chats');
-      const parsedData = JSON.parse(response.data);
+      const parsedData = JSON.parse(response.data) as ChatHistoryResponse;
 
       if (parsedData?.data && Array.isArray(parsedData.data)) {
-        const chatHistory = parsedData.data.map((chat: any) => ({
+        const chatHistory = parsedData.data.map((chat: ChatMessage) => ({
           id: chat._id,
           role: chat.type === 'ai' ? 'assistant' : 'user',
           content: chat.content,
@@ -70,9 +92,11 @@ const ChatInterface = () => {
     }
   };
 
+  const memoizedFetchChatHistory = useCallback(fetchChatHistory, [setMessages]);
+
   useEffect(() => {
-    fetchChatHistory();
-  }, []);
+    memoizedFetchChatHistory();
+  }, [memoizedFetchChatHistory]);
 
   useLayoutEffect(() => {
     if (scrollAreaRef.current) {
@@ -169,26 +193,28 @@ const ChatInterface = () => {
 
   const startRecording = () => {
     setIsRecording(true)
-    // Web Speech API
-    if (window !== undefined && (window?.SpeechRecognition || window?.webkitSpeechRecognition)) {
-      const SpeechRecognition = window?.SpeechRecognition || window?.webkitSpeechRecognition
-      const recognition = new SpeechRecognition()
+
+    const SpeechRecognitionConstructor =
+      window?.SpeechRecognition ||
+      window?.webkitSpeechRecognition;
+
+    if (window !== undefined && SpeechRecognitionConstructor) {
+      const recognition = new SpeechRecognitionConstructor();
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
-        const transcript = event.results[0][0].transcript
-        setInput(transcript)
-        setIsRecording(false)
-      }
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setIsRecording(false);
+      };
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error('Speech recognition error', event.error)
-        setIsRecording(false)
-      }
+        console.error('Speech recognition error', event.error);
+        setIsRecording(false);
+      };
 
-      recognition.start()
+      recognition.start();
     }
-
-  }
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -201,7 +227,7 @@ const ChatInterface = () => {
         className="flex-1 p-4 overflow-y-auto"
       >
         {messages.length === 0 ? (
-          <div className="text-center text-gray-500">Welcome! Let's get started.</div>
+          <div className="text-center text-gray-500">Welcome! Let&apos;s get started.</div>
         ) : (
           messages.map(m => (
             <div key={m.id} className={`mb-4 flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -214,19 +240,16 @@ const ChatInterface = () => {
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkBreaks]}
                   rehypePlugins={[rehypeRaw]}
-                  children={m.content?.trim()?.replace(/\n/gi, "&nbsp; \n")}
                   components={{
-                    code(props) {
-                      const { children, className, node, ...rest } = props;
+                    code({ children, className, ...rest }) {
                       const match = /language-(\w+)/.exec(className || "");
                       return match ? (
                         <SyntaxHighlighter
-                          {...rest}
-                          PreTag="div"
-                          children={String(children).replace(/\n$/, "")}
                           language={match[1]}
                           style={darcula}
-                        />
+                        >
+                          {String(children).replace(/\n$/, "")}
+                        </SyntaxHighlighter>
                       ) : (
                         <code {...rest} className={className}>
                           {children}
@@ -234,8 +257,9 @@ const ChatInterface = () => {
                       );
                     },
                   }}
-                />
-                {/* {m.content} */}
+                >
+                  {m.content?.trim()?.replace(/\n/gi, "&nbsp; \n")}
+                </ReactMarkdown>
               </div>
               {m.role === 'user' && (
                 <Avatar className="ml-2">

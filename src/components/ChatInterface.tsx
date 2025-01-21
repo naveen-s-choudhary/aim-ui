@@ -124,6 +124,7 @@ const ChatInterface = () => {
         body: JSON.stringify({
           user_id: "65764b5fd51a1faf4f6772d2",
           message: input,
+          is_specific_user: true,
           current_date_time: new Date().toISOString(),
         }),
       });

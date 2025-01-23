@@ -14,6 +14,8 @@ import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { darcula } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 
 declare global {
   interface Window {
@@ -86,6 +88,7 @@ const ChatInterface = () => {
   const [isRecording, setIsRecording] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const [isSpecificUser, setIsSpecificUser] = useState(true);
 
   const fetchChatHistory = async () => {
     try {
@@ -165,7 +168,7 @@ const ChatInterface = () => {
         body: JSON.stringify({
           user_id: "65764b5fd51a1faf4f6772d2",
           message: input,
-          is_specific_user: true,
+          is_specific_user: isSpecificUser,
           current_date_time: new Date().toISOString(),
         }),
       });
@@ -237,7 +240,25 @@ const ChatInterface = () => {
     <div className="flex h-full flex-col">
       <div className="flex justify-between items-center p-4 border-b">
         <h2 className="text-xl font-bold">Chat</h2>
-        <Button onClick={() => setShowDeleteModal(true)}>Delete</Button>
+        <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="mode-switch"
+              checked={isSpecificUser}
+              onCheckedChange={setIsSpecificUser}
+            />
+            <Label htmlFor="mode-switch">
+              {isSpecificUser ? 'Specific Mode' : 'General Mode'}
+            </Label>
+          </div>
+          <Button
+            onClick={() => setShowDeleteModal(true)}
+            variant="destructive"
+            size="sm"
+          >
+            Delete
+          </Button>
+        </div>
       </div>
       <div
         ref={scrollAreaRef}

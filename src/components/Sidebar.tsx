@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MessageSquare, Settings, LogOut } from 'lucide-react'
+import { MessageSquare, LogOut } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { Button } from './ui/button'
 
@@ -25,14 +25,6 @@ const Sidebar = () => {
               "text-gray-300 hover:text-white"
             )}>
               <MessageSquare className="h-6 w-6" />
-            </Link>
-          </li>
-          <li>
-            <Link href="/system-instruction" className={cn(
-              "flex items-center justify-center rounded-lg p-2 hover:bg-gray-700",
-              "text-gray-300 hover:text-white"
-            )}>
-              <Settings className="h-6 w-6" />
             </Link>
           </li>
         </ul>
